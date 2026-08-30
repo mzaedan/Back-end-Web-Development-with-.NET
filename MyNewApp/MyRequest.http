@@ -8,8 +8,8 @@ content-type : application/json
 
 {
     "id": 1,
-    "name": "Write Demo 3",
-    "duedate" : "2025-09-30",
+    "name": "Write Demo 1",
+    "duedate" : "2026-09-30",
     "isCompleted" : false
 }
 

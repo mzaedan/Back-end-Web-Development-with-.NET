@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.Extensions.FileSystemGlobbing;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton<ITaskService, InMemoryTaskService>();
+
+
 var app = builder.Build();
 
 app.Use(async (context, next) =>
@@ -14,19 +19,19 @@ app.UseRewriter(new RewriteOptions().AddRedirect("tasks/(.*)", "todos/$1"));
 
 var todos = new List<Todo>();
 
-app.MapGet("/todos", () => todos);
+app.MapGet("/todos", (ITaskService service) => service.GetTodos());
 
-app.MapGet("/todos/{id}", Results<Ok<Todo>, NotFound> (int id) =>
+app.MapGet("/todos/{id}", Results<Ok<Todo>, NotFound> (int id, ITaskService service) =>
 {
-    var TargetTodo = todos.SingleOrDefault(t => t.Id == id);
-    return TargetTodo is null 
+    var targetTodo = service.GetTodoById(id);
+    return targetTodo is null 
     ? TypedResults.NotFound() 
-    : TypedResults.Ok(TargetTodo);
+    : TypedResults.Ok(targetTodo);
 });
 
-app.MapPost("/todos", (Todo task) =>
+app.MapPost("/todos", (Todo task, ITaskService service) =>
 {
-    todos.Add(task);
+    service.AddTodo(task);
     return TypedResults.Created($"/todos/{task.Id}", task);
 }).AddEndpointFilter(async (context, next) =>
 {
@@ -51,9 +56,9 @@ app.MapPost("/todos", (Todo task) =>
     return await next(context);
 });
 
-app.MapDelete("/todos/{id}", (int id) =>
+app.MapDelete("/todos/{id}", (int id, ITaskService service) =>
 {
-    todos.RemoveAll(t => t.Id == id);
+    service.DeleteTodoById(id);
     return TypedResults.NoContent();
 });
 
@@ -61,10 +66,38 @@ app.Run();
 
 public record Todo(int Id, string Name, DateTime DueDate, bool IsCompleted);
 
-// public interface ITaskService
-// {
-//     Task<Todo?> GetTodoByIdAsync(int id);
-//     Task<IEnumerable<Todo>> GetAllTodosAsync();
-//     Task AddTodoAsync(Todo todo);
-//     Task DeleteTodoAsync(int id);
-// }
+interface ITaskService
+{
+    Todo? GetTodoById(int id);
+    List<Todo> GetTodos();
+    void DeleteTodoById(int id);
+    Todo AddTodo(Todo task);
+}
+
+class InMemoryTaskService : ITaskService
+{
+    private readonly List<Todo> _todos = [];
+
+    public Todo AddTodo(Todo task)
+    {
+        _todos.Add(task);
+        return task;
+    }
+
+    public void DeleteTodoById(int id)
+    {
+        _todos.RemoveAll(task => id == task.Id);
+    }
+
+   public Todo? GetTodoById(int id)
+    {
+        var result = _todos.SingleOrDefault(t => t.Id == id);
+        return result;
+    }
+
+    public List<Todo> GetTodos()
+    {
+        return _todos;
+    }
+
+}

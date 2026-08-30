@@ -26,3 +26,4 @@ D:\coding\webapi\MyNewApp\obj\Debug\net10.0\refint\MyNewApp.dll
 D:\coding\webapi\MyNewApp\obj\Debug\net10.0\MyNewApp.pdb
 D:\coding\webapi\MyNewApp\obj\Debug\net10.0\MyNewApp.genruntimeconfig.cache
 D:\coding\webapi\MyNewApp\obj\Debug\net10.0\ref\MyNewApp.dll
+D:\coding\webapi\MyNewApp\obj\Debug\net10.0\MyNewApp.sourcelink.json
