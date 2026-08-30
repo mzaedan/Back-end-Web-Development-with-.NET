@@ -1,0 +1,7 @@
+# Local application configuration and secrets
+MyNewApp/appsettings.json
+MyNewApp/appsettings.Development.json
+
+# Build output
+**/bin/
+**/obj/
